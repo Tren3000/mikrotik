@@ -1,0 +1,109 @@
+/system script
+add dont-require-permissions=no name=AutoBackUp_to_USB owner=ИМЯ_ВАШЕГО ПОЛЬЗОВАТЕЛЯ \
+    policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
+    source="# Script save settings and deleting old files\r\
+    \n# updated 2023/08/03\r\
+    \n\r\
+    \n:do {\r\
+    \n    :local maxDaysAgo 30;\r\
+    \n    :local autoDiskSelection true;\r\
+    \n    :local diskName \"flash\";\r\
+    \n\r\
+    \n    # Automatic disk selection function\r\
+    \n    :local DiskFinder do={\r\
+    \n        :local dskName \"\";\r\
+    \n        :local allDisks [:toarray [/file find type=\"disk\"]];\r\
+    \n        :local extDisks \"\";\r\
+    \n        :do {:set extDisks [:toarray [/disk find]]} on-error={}\r\
+    \n        :local cntAllDisk [:len \$allDisks];\r\
+    \n        :local cntExtDisk [:len \$extDisks];\r\
+    \n        :if (\$cntAllDisk!=0) do={:set dskName [/file get [(\$allDisks->\
+    0)] name]}\r\
+    \n        :do {:if (\$cntExtDisk!=0) do={:set dskName [/disk get [(\$extDi\
+    sks->0)] name]}} on-error={}\r\
+    \n        :return (\$dskName);\r\
+    \n    }\r\
+    \n\r\
+    \n    # Main body of the script\r\
+    \n    :local nameID [system identity get name];\r\
+    \n    :put \"\$[system clock get time] - Start saving settings and deletin\
+    g old files on '\$nameID' router\";\r\
+    \n    :if (\$autoDiskSelection) do={\r\
+    \n        :set \$diskName [\$DiskFinder];\r\
+    \n        :put \"\$[system clock get time] - Automatic disk selection is A\
+    CTIVATED\";\r\
+    \n    } else={\r\
+    \n        :put \"\$[system clock get time] - Disk is specified by user is \
+    ACTIVATED\";\r\
+    \n    }\r\
+    \n    :put \"\$[system clock get time] - Work is done on disk: '\$diskName\
+    '\";\r\
+    \n    :local filterName \"\";\r\
+    \n    :if ([:len \$diskName]!=0) do={\r\
+    \n        :set filterName (\$diskName.\"/\".\$nameID.\"_\");\r\
+    \n    } else={\r\
+    \n        :set filterName (\$nameID.\"_\");\r\
+    \n    }\r\
+    \n    :local monthsOfYear (\"jan\",\"feb\",\"mar\",\"apr\",\"may\",\"jun\"\
+    ,\"jul\",\"aug\",\"sep\",\"oct\",\"nov\",\"dec\");\r\
+    \n    :local currentDate  [/system clock get date];\r\
+    \n    :local currentDay   [:pick \$currentDate 4 6 ];\r\
+    \n    :local currentMonth [:pick \$currentDate 0 3 ];\r\
+    \n    :local currentYear  [:pick \$currentDate 7 11];\r\
+    \n    :local idxCurrMonth ([:find \$monthsOfYear \$currentMonth -1 ] +1);\
+    \r\
+    \n    :local hddFree 0;\r\
+    \n    :local cntExtDsk 0;\r\
+    \n    :do {:set cntExtDsk [:len [/disk find]]} on-error={}\r\
+    \n    :do {\r\
+    \n        :foreach fileIndex in=[/file find] do={\r\
+    \n            :do {\r\
+    \n                :local fileDate   [/file get number=\$fileIndex creation\
+    -time];\r\
+    \n                :set   fileDate   [:pick \$fileDate 0 11];\r\
+    \n                :local fileMonth  [:pick \$fileDate 0 3 ];\r\
+    \n                :set   fileMonth ([:find \$monthsOfYear \$fileMonth -1 ]\
+    \_+1);\r\
+    \n                :local fileDay    [:pick \$fileDate 4 6 ];\r\
+    \n                :local fileYear   [:pick \$fileDate 7 11];\r\
+    \n                :local fileName   [/file get number=\$fileIndex name];\r\
+    \n                :local sum 0;\r\
+    \n                :set sum (\$sum+((\$currentYear-\$fileYear)*365));\r\
+    \n                :set sum (\$sum+((\$idxCurrMonth-\$fileMonth)*30));\r\
+    \n                :set sum (\$sum+(\$currentDay-\$fileDay));\r\
+    \n                :if ((\$sum>=\$maxDaysAgo) && ([file get number=\$fileIn\
+    dex name]~\$filterName)) do={\r\
+    \n                    /file remove [find name~\$fileName];\r\
+    \n                    :put \"\$[system clock get time] - Deleting outdated\
+    \_file: '\$fileName'\";\r\
+    \n                }\r\
+    \n            } on-error={}\r\
+    \n        }\r\
+    \n        :set hddFree ([/system resource get free-hdd-space]/([/system re\
+    source get total-hdd-space]/100));\r\
+    \n        :set maxDaysAgo (\$maxDaysAgo-1);\r\
+    \n    } while=(\$hddFree<5 && \$cntExtDsk=0 && \$maxDaysAgo>0);\r\
+    \n    :if (\$maxDaysAgo>0) do={\r\
+    \n        :local fileNameCreate (\$filterName.\$currentYear.\$currentMonth\
+    .\$currentDay);\r\
+    \n        :put \"\$[system clock get time] - Generating new file name: '\$\
+    fileNameCreate'\";\r\
+    \n        :put \"\$[system clock get time] - Saving a backup copy\";\r\
+    \n        /system backup save name=\$fileNameCreate;\r\
+    \n        :put \"\$[system clock get time] - Saving system settings\";\r\
+    \n        /export file=\$fileNameCreate;\r\
+    \n        :put \"\$[system clock get time] - Saving device log\";\r\
+    \n        /log print file=\$fileNameCreate;\r\
+    \n        /log info \"Backup completed successfully\";\r\
+    \n    } else={:put \"\$[system clock get time] - No disk space, free up di\
+    sk space\";/log warning (\"No disk space, free up disk space for backup\")\
+    }\r\
+    \n    :put \"\$[system clock get time] - End of saving settings and delete\
+    \_old files\";\r\
+    \n} on-error={/log warning (\"Script error, backup troubles\")}"
+
+/system scheduler
+add interval=1d name=AutoBackUp_to_USB on-event=\
+    "/system script run AutoBackUp_to_USB" policy=\
+    ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
+    start-date=2023-08-30 start-time=06:00:00
