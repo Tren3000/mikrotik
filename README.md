@@ -16,3 +16,15 @@ RussianIP - список всех сетей и масок, принадлежа
 BlockWinboxWAN - 3в1: правило в firewall/filter, RAW и script. Создаёт правило в firewall/fiter о добавлении ip-адресов, кто ломится на порт 8291(порт winbox), за исключением белого списка. Далее правило в RAW, где идёт блокирока всех ip-адресов address list, до обработки firewall, для снижения нагрузки на роутер. Дополнительно скрипт от админа, по поиску фразы "denied winbox/dude connect from" и добавление ip-адреса в address list. Также создаётся правило в планировщике, на ежедневный запуск скрипта в 06:01 утра.
 > [!CAUTION]
 > **ОБЯЗАТЕЛЬНО ИЗМЕНИТЬ ИМЯ ПОЛЬЗООВАТЕЛЯ В СКРИПТЕ НА СВОЕГО  !!!**
+
+
+# Section Heading
+
+Some body text of this section.
+
+<a name="my-custom-anchor-point"></a>
+Some text I want to provide a direct link to, but which doesn't have its own heading.
+
+(… more content…)
+
+[A link to that custom anchor](#my-custom-anchor-point)
