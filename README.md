@@ -8,4 +8,4 @@
 > [!CAUTION]
 > **ОБЯЗАТЕЛЬНО ИЗМЕНИТЬ ИМЯ ПОЛЬЗООВАТЕЛЯ В СКРИПТЕ НА СВОЕГО  !!!**
 
-`rgb(9, 105, 218)`е`rgb(9, 105, 218)`ф
+The background color is `#ffffff` for light mode and `#000000` for dark mode.
