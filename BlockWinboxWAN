@@ -1,0 +1,33 @@
+/ip firewall filter
+add action=add-src-to-address-list address-list=BlockWinboxWAN \
+    address-list-timeout=1w3d chain=input comment="Block 8291 from WAN" \
+    connection-state="" dst-limit=1,5,dst-address/1m40s dst-port=8291 \
+    in-interface-list=WAN limit=1,5:packet protocol=tcp psd=21,3s,3,1 \
+    src-address-list=!whitelist time=0s-1d,sun,mon,tue,wed,thu,fri,sat
+add action=accept chain=input comment="Allow 8291 from WAN from Whitelist" \
+    connection-state="" dst-limit=1,5,dst-address/1m40s dst-port=8291 \
+    in-interface-list=WAN limit=1,5:packet protocol=tcp psd=21,3s,3,1 \
+    src-address-list=whitelist time=0s-1d,sun,mon,tue,wed,thu,fri,sat
+/ip firewall raw
+add action=drop chain=prerouting in-interface-list=WAN src-address-list=\
+    BlockWinboxWAN
+/system script
+add dont-require-permissions=no name=BlockWinboxWAN owner=ИМЯ_ВАШЕГО_ПОЛЬЗОВАТЕЛЯ policy=\
+    ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source=":\
+    local ipi\r\
+    \n:local mess [/log find message~\"denied winbox/dude connect from\"]\r\
+    \nforeach i in=\$mess do={\r\
+    \n:set ipi [:pick [/log get \$i message ] 32 ([:len [/log get \$i message \
+    ]])]\r\
+    \nif ([/ip firewall address-list find address=\$ipi] = \"\" ) do={\r\
+    \n# :log warning \$ipi\r\
+    \n/ip firewall address-list add address=\"\$ipi\" timeout=30d list=BlockWi\
+    nboxWAN\r\
+    \n}\r\
+    \n}\r\
+    \n#:log warning \"FIN\""
+/system scheduler
+add interval=1d name=BlockWinboxWAN on-event=\
+    "/system script run BlockWinboxWAN" policy=\
+    ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon \
+    start-date=2025-02-11 start-time=06:01:00
