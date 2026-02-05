@@ -1,7 +1,6 @@
 <img width="922" height="230" alt="изображение" src="https://github.com/user-attachments/assets/43a1d55c-cf13-4baa-af05-e513d6522861" />
 
-
-
+# Section Heading
 
 Список инструкций для настройки RouterOS
 
