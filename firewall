@@ -1,0 +1,57 @@
+/ip firewall filter
+add action=accept chain=input comment=\
+    "Forward and Input Established and Related connections" connection-state=\
+    established,related
+add action=accept chain=input connection-state=new dst-port=8291 protocol=tcp
+add action=accept chain=input connection-state=new in-interface=LAN
+add action=add-src-to-address-list address-list=BlockWinboxWAN \
+    address-list-timeout=1w3d chain=input comment="Block 8291 from WAN" \
+    connection-state="" dst-limit=1,5,dst-address/1m40s dst-port=8291 \
+    in-interface-list=WAN limit=1,5:packet protocol=tcp psd=21,3s,3,1 \
+    src-address-list=!whitelist time=0s-1d,sun,mon,tue,wed,thu,fri,sat
+add action=add-src-to-address-list address-list=PortScanDetect \
+    address-list-timeout=1w3d chain=input comment="PortScanDetect TCP" \
+    in-interface-list=WAN protocol=tcp psd=21,3s,3,1 src-address-list=\
+    !whitelist
+add action=add-src-to-address-list address-list=PortScanDetect \
+    address-list-timeout=1w3d chain=input comment="PortScanDetect UDP" \
+    in-interface-list=WAN protocol=udp psd=21,3s,3,1 src-address-list=\
+    !whitelist
+add action=accept chain=input comment="Allow L2TP ipsec" in-interface-list=\
+    WAN protocol=ipsec-esp
+add action=accept chain=input comment="Allow L2TP accept ports 500,1701,4500" \
+    dst-port=500,1701,4500 in-interface-list=WAN protocol=udp
+add action=accept chain=forward comment="Allow VPN to LAN" in-interface-list=\
+    !WAN out-interface=LAN src-address=10.10.10.0/24
+add action=accept chain=input comment="Allow PPTP GRE" connection-state=new \
+    protocol=gre
+add action=accept chain=input comment="Allow PPTP 1723" connection-state=new \
+    dst-port=1723 protocol=tcp
+add action=accept chain=input comment="Allow 8291 from WAN from Whitelist" \
+    connection-state="" dst-limit=1,5,dst-address/1m40s dst-port=8291 \
+    in-interface-list=WAN limit=1,5:packet protocol=tcp psd=21,3s,3,1 \
+    src-address-list=whitelist time=0s-1d,sun,mon,tue,wed,thu,fri,sat
+add action=accept chain=input comment=NTP-Allow dst-port=123 in-interface=LAN \
+    protocol=udp
+add action=jump chain=input jump-target=icmp protocol=icmp
+add action=drop chain=input comment="Drop All Input"
+add action=accept chain=forward connection-state=established,related
+add action=accept chain=forward connection-state=new in-interface=LAN
+add action=accept chain=forward connection-nat-state=dstnat
+add action=jump chain=forward in-interface-list=!WAN jump-target=icmp \
+    protocol=icmp
+add action=drop chain=forward
+add action=accept chain=icmp comment="echo reply" icmp-options=0:0 protocol=\
+    icmp
+add action=accept chain=icmp comment="net unreachable" icmp-options=3:0 \
+    protocol=icmp
+add action=accept chain=icmp comment="host unreachable" icmp-options=3:1 \
+    protocol=icmp
+add action=accept chain=icmp comment=\
+    "host unreachable fragmentation required" icmp-options=3:4 protocol=icmp
+add action=accept chain=icmp comment="allow echo request" icmp-options=8:0 \
+    protocol=icmp
+add action=accept chain=icmp comment="allow time exceed" icmp-options=11:0 \
+    protocol=icmp
+add action=accept chain=icmp icmp-options=12:0 protocol=icmp
+add action=drop chain=icmp comment="deny all other types"
