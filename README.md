@@ -1,11 +1,6 @@
 <img width="922" height="230" alt="изображение" src="https://github.com/user-attachments/assets/43a1d55c-cf13-4baa-af05-e513d6522861" />
 
-# Section Heading
-
-Список инструкций для настройки RouterOS
-
-
-
+# Список инструкций для настройки RouterOS
 
 RussianIP - список всех сетей и масок, принадлежащих РФ. Создаётся address list  и добавляется правило в RAW , по запрету доступа к L2TP, НЕ из диапазона address list RussianIP, до обработки firewall, для снижения нагрузки на железо. При желании, можно изменить протокол, на свой. 
 
@@ -17,13 +12,3 @@ BlockWinboxWAN - 3в1: правило в firewall/filter, RAW и script. Соз�
 > **ОБЯЗАТЕЛЬНО ИЗМЕНИТЬ ИМЯ ПОЛЬЗООВАТЕЛЯ В СКРИПТЕ НА СВОЕГО  !!!**
 
 
-# Section Heading
-
-Some body text of this section.
-
-<a name="my-custom-anchor-point"></a>
-Some text I want to provide a direct link to, but which doesn't have its own heading.
-
-(… more content…)
-
-[A link to that custom anchor](#my-custom-anchor-point)
